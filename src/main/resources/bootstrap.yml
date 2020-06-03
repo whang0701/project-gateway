@@ -1,0 +1,17 @@
+
+spring:
+  application:
+    name: project-gateway
+
+server:
+  port: 8801
+  servlet-path: /gateway
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8800/eureka/ #eureka服务注册地址
+
+logging:
+  level:
+    com.wanghang.projectsdk.base.dao:debug
