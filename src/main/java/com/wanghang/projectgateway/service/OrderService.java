@@ -3,27 +3,22 @@ package com.wanghang.projectgateway.service;
 
 import com.alibaba.fastjson.JSON;
 import com.wanghang.projectgateway.model.to.order.*;
-import com.wanghang.projectgateway.model.to.product.ProductDetailQueryTo;
-import com.wanghang.projectgateway.model.to.receiver.ReceiverAddTo;
-import com.wanghang.projectgateway.model.to.receiver.ReceiverUpdateTo;
 import com.wanghang.projectgateway.model.vo.order.OrderListQueryVo;
 import com.wanghang.projectgateway.model.vo.order.OrderPlaceVo;
 import com.wanghang.projectgateway.model.vo.order.OrderQueryVo;
-import com.wanghang.projectgateway.model.vo.product.ProductDetailQueryVo;
-import com.wanghang.projectgateway.model.vo.receiver.ReceiverVo;
 import com.wanghang.projectsdk.base.dao.OrderMapper;
-import com.wanghang.projectsdk.base.dao.ReceiverMapper;
-import com.wanghang.projectsdk.base.entity.*;
+import com.wanghang.projectsdk.base.entity.Order;
+import com.wanghang.projectsdk.base.entity.OrderExample;
+import com.wanghang.projectsdk.base.entity.Product;
+import com.wanghang.projectsdk.base.entity.Receiver;
 import com.wanghang.projectsdk.base.enumeration.OrderStatusType;
 import com.wanghang.projectsdk.base.enumeration.ProductSourceType;
 import com.wanghang.projectsdk.base.enumeration.ProductType;
 import com.wanghang.projectsdk.base.enumeration.StateFlagType;
 import com.wanghang.projectsdk.base.exception.ServiceException;
 import com.wanghang.projectsdk.base.model.CodeType;
-import com.wanghang.projectsdk.base.model.Response;
 import com.wanghang.projectsdk.third.controller.IOrderController;
-import com.wanghang.projectsdk.third.factory.FeignClientFactory;
-import io.swagger.models.auth.In;
+import com.wanghang.projectsdk.third.factory.ThirdSourceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,7 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -78,7 +76,7 @@ public class OrderService {
             log.error("未识别该渠道option:{}", to.getProductSource());
             throw new ServiceException(CodeType.BUSINESS_ERROR, "未识别该渠道");
         }
-        IOrderController orderController = FeignClientFactory.createOrderFeign(type);
+        IOrderController orderController = ThirdSourceFactory.createSourceFactory(type).createOrderFeign();
         if (Objects.isNull(orderController)) {
             log.error("未获取到该渠道服务:{}", type.getValue());
             throw new ServiceException(CodeType.SYSTEM_ERROR, "未获取该渠道服务");
@@ -215,7 +213,7 @@ public class OrderService {
             throw new ServiceException(CodeType.THIRD_ERROR, "订单非待收货状态，不可收货");
         }
         // 调用第三方接口收货
-        IOrderController orderController = FeignClientFactory.createOrderFeign(ProductSourceType.getType(to.getSource()));
+        IOrderController orderController = ThirdSourceFactory.createSourceFactory(ProductSourceType.getType(to.getSource())).createOrderFeign();
         if (!Objects.equals(orderController.doReceive(order.getNo()), OrderStatusType.RCEIVED.getKey())) {
             throw new ServiceException(CodeType.THIRD_ERROR, "第三方订单收货失败");
         }
@@ -240,7 +238,7 @@ public class OrderService {
         // 写评价
         remarkService.doRemark(order, to.getStar(), to.getContent());
         // 调用第三方接口评价
-        IOrderController orderController = FeignClientFactory.createOrderFeign(ProductSourceType.getType(to.getSource()));
+        IOrderController orderController = ThirdSourceFactory.createSourceFactory(ProductSourceType.getType(to.getSource())).createOrderFeign();
         if (!Objects.equals(orderController.doRemark(order.getNo()), OrderStatusType.REMARKED.getKey())) {
             throw new ServiceException(CodeType.THIRD_ERROR, "第三方订单评价失败");
         }
@@ -263,7 +261,7 @@ public class OrderService {
             throw new ServiceException(CodeType.THIRD_ERROR, "订单非已收货/已评价状态，不可退单");
         }
         // 调用第三方接口退单
-        IOrderController orderController = FeignClientFactory.createOrderFeign(ProductSourceType.getType(to.getSource()));
+        IOrderController orderController = ThirdSourceFactory.createSourceFactory(ProductSourceType.getType(to.getSource())).createOrderFeign();
         if (!Objects.equals(orderController.doRefund(order.getNo(), to.getContent()), OrderStatusType.REFUNDIND.getKey())) {
             throw new ServiceException(CodeType.THIRD_ERROR, "第三方订单退款申请失败");
         }

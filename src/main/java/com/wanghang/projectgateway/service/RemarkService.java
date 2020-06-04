@@ -14,9 +14,8 @@ import com.wanghang.projectsdk.base.enumeration.ProductSourceType;
 import com.wanghang.projectsdk.base.enumeration.StateFlagType;
 import com.wanghang.projectsdk.base.exception.ServiceException;
 import com.wanghang.projectsdk.base.model.CodeType;
-import com.wanghang.projectsdk.base.model.Response;
 import com.wanghang.projectsdk.third.controller.IRemarkController;
-import com.wanghang.projectsdk.third.factory.FeignClientFactory;
+import com.wanghang.projectsdk.third.factory.ThirdSourceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +52,7 @@ public class RemarkService {
             log.error("未识别该渠道source:{}", to.getSource());
             throw new ServiceException(CodeType.BUSINESS_ERROR, "未识别该渠道");
         }
-        IRemarkController remarkController = FeignClientFactory.createRemarkFeign(type);
+        IRemarkController remarkController = ThirdSourceFactory.createSourceFactory(type).createRemarkFeign();
         if (Objects.isNull(remarkController)) {
             log.error("未获取到该渠道服务:{}", type.getValue());
             throw new ServiceException(CodeType.SYSTEM_ERROR, "未获取该渠道服务");
@@ -78,7 +77,7 @@ public class RemarkService {
             log.error("未识别该渠道option:{}", order.getProductSource());
             throw new ServiceException(CodeType.BUSINESS_ERROR, "未识别该渠道");
         }
-        IRemarkController remarkController = FeignClientFactory.createRemarkFeign(type);
+        IRemarkController remarkController = ThirdSourceFactory.createSourceFactory(type).createRemarkFeign();
         if (Objects.isNull(remarkController)) {
             log.error("未获取到该渠道服务:{}", type.getValue());
             throw new ServiceException(CodeType.SYSTEM_ERROR, "未获取该渠道服务");

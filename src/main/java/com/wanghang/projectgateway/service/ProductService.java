@@ -10,9 +10,8 @@ import com.wanghang.projectsdk.base.entity.Product;
 import com.wanghang.projectsdk.base.enumeration.ProductSourceType;
 import com.wanghang.projectsdk.base.exception.ServiceException;
 import com.wanghang.projectsdk.base.model.CodeType;
-import com.wanghang.projectsdk.base.model.Response;
 import com.wanghang.projectsdk.third.controller.IProductController;
-import com.wanghang.projectsdk.third.factory.FeignClientFactory;
+import com.wanghang.projectsdk.third.factory.ThirdSourceFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +59,7 @@ public class ProductService {
         int i = 0;
         for (ProductSourceType type : ProductSourceType.values()) {
             i++;
-            IProductController productController = FeignClientFactory.createProductFeign(type);
+            IProductController productController = ThirdSourceFactory.createSourceFactory(type).createProductFeign();
             if (Objects.isNull(productController)) {
                 log.warn("未获取到该渠道服务:{}", type.getValue());
                 continue;
@@ -84,7 +83,7 @@ public class ProductService {
             log.error("未识别该渠道option:{}", sourceKey);
             throw new ServiceException(CodeType.BUSINESS_ERROR, "未识别该渠道");
         }
-        IProductController productController = FeignClientFactory.createProductFeign(type);
+        IProductController productController = ThirdSourceFactory.createSourceFactory(type).createProductFeign();
         if (Objects.isNull(productController)) {
             log.error("未获取到该渠道服务:{}", type.getValue());
             throw new ServiceException(CodeType.SYSTEM_ERROR, "未获取该渠道服务");
@@ -113,7 +112,7 @@ public class ProductService {
             log.error("未识别该渠道source:{}", source);
             throw new ServiceException(CodeType.BUSINESS_ERROR, "未识别该渠道");
         }
-        IProductController productController = FeignClientFactory.createProductFeign(type);
+        IProductController productController = ThirdSourceFactory.createSourceFactory(type).createProductFeign();
         if (Objects.isNull(productController)) {
             log.error("未获取到该渠道服务:{}", type.getValue());
             throw new ServiceException(CodeType.SYSTEM_ERROR, "未获取该渠道服务");
